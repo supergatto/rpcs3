@@ -683,6 +683,7 @@ enum
 	CELL_GCM_REPLACE = 0x1E01,
 	CELL_GCM_INCR = 0x1E02,
 	CELL_GCM_DECR = 0x1E03,
+	CELL_GCM_INVERT = 0x150A,
 	CELL_GCM_INCR_WRAP = 0x8507,
 	CELL_GCM_DECR_WRAP = 0x8508,
 };
@@ -698,6 +699,7 @@ rsx::stencil_op rsx::to_stencil_op(u16 in)
 	case CELL_GCM_INCR_WRAP: return rsx::stencil_op::incr_wrap;
 	case CELL_GCM_DECR_WRAP: return rsx::stencil_op::decr_wrap;
 	case CELL_GCM_ZERO: return rsx::stencil_op::zero;
+	case CELL_GCM_INVERT: return rsx::stencil_op::invert;
 	}
 	fmt::throw_exception("Unknown stencil op 0x%x" HERE, in);
 }
@@ -782,7 +784,6 @@ enum
 	CELL_GCM_OR = 0x1507,
 	CELL_GCM_NOR = 0x1508,
 	CELL_GCM_EQUIV = 0x1509,
-	CELL_GCM_INVERT = 0x150A,
 	CELL_GCM_OR_REVERSE = 0x150B,
 	CELL_GCM_COPY_INVERTED = 0x150C,
 	CELL_GCM_OR_INVERTED = 0x150D,
@@ -966,6 +967,7 @@ rsx::blit_engine::context_dma rsx::blit_engine::to_context_dma(u32 in)
 {
 	switch (in)
 	{
+	case CELL_GCM_CONTEXT_DMA_MEMORY_HOST_BUFFER: return rsx::blit_engine::context_dma::memory_host_buffer; //Killzone 2
 	case CELL_GCM_CONTEXT_DMA_TO_MEMORY_GET_REPORT: return rsx::blit_engine::context_dma::to_memory_get_report;
 	case CELL_GCM_CONTEXT_DMA_REPORT_LOCATION_MAIN: return rsx::blit_engine::context_dma::report_location_main;
 	}

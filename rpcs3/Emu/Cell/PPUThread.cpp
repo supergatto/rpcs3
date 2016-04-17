@@ -22,7 +22,7 @@
 //#include "llvm/IR/Module.h"
 //#include "llvm/IR/Function.h"
 //#include "llvm/Analysis/Passes.h"
-//#include "llvm/Analysis/BasicAliasAnalysis.h"
+#include "llvm/Analysis/BasicAliasAnalysis.h"
 //#include "llvm/Analysis/TargetTransformInfo.h"
 #include "llvm/Analysis/MemoryDependenceAnalysis.h"
 //#include "llvm/Analysis/LoopInfo.h"
@@ -408,7 +408,7 @@ u32 ppu_thread::stack_push(u32 size, u32 align_v)
 
 		if (context.gpr[1] < context.stack_addr)
 		{
-			fmt::throw_exception("Stack overflow (size=0x%x, align=0x%x, SP=0x%llx, stack=*0x%x)" HERE, size, align_v, old_pos, context.stack_addr);
+			LOG_ERROR(PPU, "Stack overflow (size=0x%x, align=0x%x, SP=0x%llx, stack=*0x%x)" HERE, size, align_v, old_pos, context.stack_addr);
 		}
 		else
 		{
@@ -596,7 +596,7 @@ extern void ppu_initialize(const std::string& name, const std::vector<ppu_functi
 	pm.add(createTailCallEliminationPass());
 	pm.add(createReassociatePass());
 	pm.add(createInstructionCombiningPass());
-	//pm.add(createBasicAAWrapperPass());
+	pm.add(createBasicAAWrapperPass());
 	//pm.add(new MemoryDependenceAnalysis());
 	pm.add(createLICMPass());
 	pm.add(createLoopInstSimplifyPass());
@@ -607,7 +607,7 @@ extern void ppu_initialize(const std::string& name, const std::vector<ppu_functi
 	pm.add(createInstructionSimplifierPass());
 	pm.add(createAggressiveDCEPass());
 	pm.add(createCFGSimplificationPass());
-	//pm.add(createLintPass()); // Check
+	pm.add(createLintPass()); // Check
 
 	// Translate functions
 	for (const auto& info : funcs)

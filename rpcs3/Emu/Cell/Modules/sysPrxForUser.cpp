@@ -1,4 +1,4 @@
-#include "stdafx.h"
+﻿#include "stdafx.h"
 #include "Emu/System.h"
 #include "Emu/Cell/PPUModule.h"
 
@@ -176,6 +176,18 @@ s32 console_write(vm::ptr<char> data, u32 len)
 	return CELL_OK;
 }
 
+s32 sysPrxForUser_B5D5F64E()
+{
+	UNIMPLEMENTED_FUNC(sysPrxForUser);
+	return CELL_OK;
+}
+
+s32 sysPrxForUser_3EF17F8C()
+{
+	UNIMPLEMENTED_FUNC(sysPrxForUser);
+	return CELL_OK;
+}
+
 
 extern void sysPrxForUser_sys_lwmutex_init();
 extern void sysPrxForUser_sys_lwcond_init();
@@ -223,4 +235,7 @@ DECLARE(ppu_module_manager::sysPrxForUser)("sysPrxForUser", []()
 	REG_FUNC(sysPrxForUser, console_getc);
 	REG_FUNC(sysPrxForUser, console_putc);
 	REG_FUNC(sysPrxForUser, console_write);
+	REG_FNID(sysPrxForUser, 0xB5D5F64E, sysPrxForUser_B5D5F64E);
+	REG_FNID(sysPrxForUser, 0x3EF17F8C, sysPrxForUser_3EF17F8C); //Np_Util Uncharted 3
+	
 });

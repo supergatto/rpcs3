@@ -34,7 +34,7 @@ private:
 	u32 m_draw_calls = 0;
 	u32 m_begin_time = 0;
 	u32 m_draw_time = 0;
-	u32 m_vertex_upload_time = 0;
+	__int64 m_vertex_upload_time = 0;
 	u32 m_textures_upload_time = 0;
 
 	//Compare to see if transform matrix have changed

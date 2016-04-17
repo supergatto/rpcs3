@@ -150,7 +150,7 @@ private:
 
 	struct glyph
 	{
-		u8 character;
+		long character;
 		u32 glyph_point_offset;
 		u32 points_count;
 		std::vector<u8> plot;

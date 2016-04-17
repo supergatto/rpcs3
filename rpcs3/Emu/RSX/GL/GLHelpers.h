@@ -591,7 +591,7 @@ namespace gl
 	protected:
 
 		u32 m_data_loc = 0;
-		u32 m_limit = 0;
+		GLsizeiptr m_limit = 0;
 		void *m_memory_mapping = nullptr;
 
 		GLsync m_fence = nullptr;

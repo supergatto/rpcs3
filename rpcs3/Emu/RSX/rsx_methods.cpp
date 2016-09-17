@@ -865,8 +865,10 @@ namespace rsx
 
 		registers[NV4097_SET_ZSTENCIL_CLEAR_VALUE] = 0xffffffff;
 
-		for (auto& tex : fragment_textures) tex.init();
-		for (auto& tex : vertex_textures) tex.init();
+		std::for_each(fragment_textures.begin(), fragment_textures.end(), [](auto& ft) { ft.init(); });
+		std::for_each(vertex_textures.begin(), vertex_textures.end(), [](auto& vt) { vt.init(); });
+		std::for_each(
+		    vertex_arrays_info.begin(), vertex_arrays_info.end(), [](auto& vtx) { vtx.reset(); });
 	}
 
 	void rsx_state::decode(u32 reg, u32 value)

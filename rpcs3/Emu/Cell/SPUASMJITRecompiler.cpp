@@ -26,8 +26,8 @@ const spu_decoder<spu_recompiler> s_spu_decoder;
 spu_recompiler::spu_recompiler()
 	: m_jit(std::make_shared<asmjit::JitRuntime>())
 {
-	asmjit::X86CpuInfo inf;
-	asmjit::X86CpuUtil::detect(&inf);
+	asmjit::CpuInfo inf;
+//	asmjit::X86CpuUtil::detect(&inf);
 
 	LOG_SUCCESS(SPU, "SPU Recompiler (ASMJIT) created...");
 
@@ -55,17 +55,17 @@ void spu_recompiler::compile(spu_function_t& f)
 	dis_asm.offset = reinterpret_cast<u8*>(f.data.data()) - f.addr;
 
 	StringLogger logger;
-	logger.setOption(kLoggerOptionBinaryForm, true);
+	logger.addOptions(Logger::kOptionBinaryForm);
 
 	std::string log = fmt::format("========== SPU FUNCTION 0x%05x - 0x%05x ==========\n\n", f.addr, f.addr + f.size);
 
 	this->m_func = &f;
 
-	X86Compiler compiler(m_jit.get());
-	this->c = &compiler;
+	X86Assembler compiler(m_jit.get());
+	this->a = &compiler;
 	compiler.setLogger(&logger);
 
-	compiler.addFunc(kFuncConvHost, FuncBuilder2<u32, void*, void*>());
+	compiler.addFunc(kCallConvHost, FuncBuilder2<u32, void*, void*>());
 
 	// Initialize variables
 	X86GpVar cpu_var(compiler, kVarTypeIntPtr, "cpu");
@@ -293,7 +293,7 @@ void spu_recompiler::InterpreterCall(spu_opcode_t op)
 	};
 
 	c->mov(SPU_OFF_32(pc), m_pos);
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, u32(SPUThread*, u32, spu_inter_func_t)>(gate)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<u32, void*, u32, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, u32(SPUThread*, u32, spu_inter_func_t)>(gate)), asmjit::kCallConvHost, asmjit::FuncBuilder3<u32, void*, u32, void*>());
 	call->setArg(0, *cpu);
 	call->setArg(1, asmjit::imm_u(op.opcode));
 	call->setArg(2, asmjit::imm_ptr(asmjit_cast<void*>(s_spu_interpreter.decode(op.opcode))));
@@ -369,7 +369,7 @@ void spu_recompiler::FunctionCall()
 		}
 	};
 
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, u32(SPUThread*, u32)>(gate)), asmjit::kFuncConvHost, asmjit::FuncBuilder2<u32, SPUThread*, u32>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, u32(SPUThread*, u32)>(gate)), asmjit::kCallConvHost, asmjit::FuncBuilder2<u32, SPUThread*, u32>());
 	call->setArg(0, *cpu);
 	call->setArg(1, asmjit::imm_u(spu_branch_target(m_pos + 4)));
 	call->setRet(0, *addr);
@@ -485,7 +485,7 @@ void spu_recompiler::ROT(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const s32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const s32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -512,7 +512,7 @@ void spu_recompiler::ROTM(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -540,7 +540,7 @@ void spu_recompiler::ROTMA(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(s32*, const s32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(s32*, const s32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -568,7 +568,7 @@ void spu_recompiler::SHL(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -595,7 +595,7 @@ void spu_recompiler::ROTH(spu_opcode_t op) //nf
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const s16*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const s16*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -622,7 +622,7 @@ void spu_recompiler::ROTHM(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const u16*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const u16*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -650,7 +650,7 @@ void spu_recompiler::ROTMAH(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(s16*, const s16*, const u16*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(s16*, const s16*, const u16*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -678,7 +678,7 @@ void spu_recompiler::SHLH(spu_opcode_t op)
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const u16*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u16*, const u16*, const u16*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -1473,7 +1473,7 @@ void spu_recompiler::CLZ(spu_opcode_t op)
 
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder2<void, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder2<void, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 
@@ -1756,7 +1756,7 @@ void spu_recompiler::CGX(spu_opcode_t op) //nf
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);
@@ -1776,7 +1776,7 @@ void spu_recompiler::BGX(spu_opcode_t op) //nf
 	c->lea(*qw0, SPU_OFF_128(gpr[op.rt]));
 	c->lea(*qw1, SPU_OFF_128(gpr[op.ra]));
 	c->lea(*qw2, SPU_OFF_128(gpr[op.rb]));
-	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kFuncConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
+	asmjit::X86CallNode* call = c->call(asmjit::imm_ptr(asmjit_cast<void*, void(u32*, const u32*, const u32*)>(body)), asmjit::kCallConvHost, asmjit::FuncBuilder3<void, void*, void*, void*>());
 	call->setArg(0, *qw0);
 	call->setArg(1, *qw1);
 	call->setArg(2, *qw2);

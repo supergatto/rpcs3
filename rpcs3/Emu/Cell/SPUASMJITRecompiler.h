@@ -5,6 +5,7 @@
 namespace asmjit
 {
 	struct JitRuntime;
+	struct X86Assembler;
 	struct X86Compiler;
 	struct X86GpVar;
 	struct X86XmmVar;
@@ -24,6 +25,7 @@ public:
 
 private:
 	// emitter:
+	asmjit::X86Assembler* a;
 	asmjit::X86Compiler* c;
 
 	// input:
